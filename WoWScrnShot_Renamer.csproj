@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>warnings</Nullable>
+    <ApplicationIcon>iconhire.ico</ApplicationIcon>
+    <PlatformTarget>x86</PlatformTarget>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>C:\Users\Misaka\source\repos\Adachi\AdachiSig.pfx</AssemblyOriginatorKeyFile>
+    <Authors>$(AssemblyName)</Authors>
+    <PackageProjectUrl>https://github.com/Adachi91/WoWScrnShot_Renamer</PackageProjectUrl>
+    <Copyright>Adachi91</Copyright>
+    <RepositoryUrl>https://github.com/Adachi91/WoWScrnShot_Renamer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <FileVersion>1.3.26</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="iconhire.ico" />
+  </ItemGroup>
+
+</Project>
