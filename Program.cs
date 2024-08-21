@@ -2,70 +2,134 @@
 using System.IO;
 using static moo; //idc I'm leavin it moo because it's cute.
 
+print($"|c2***************************************|n    Screenshot Renamer by Adachi91|n***************************************|r|n");
 
-//ConsoleColor holder = Console.ForegroundColor;
+print($"Please enter the full path to the Directory where the screenshots are located (example: C:\\User\\MyUser\\Pictures\\Screenshots)." +
+    $"|nAlternatively you can place the executable in the directory with the screenshots.");
 
-//Console.ForegroundColor = ConsoleColor.Green;
-//Console.WriteLine();
-//Console.ForegroundColor = holder;
-print("***************************************\r\n    Screenshot Renamer by Adachi91\r\n***************************************", ConsoleColor.Green);
 
-Console.WriteLine("\r\nPlease enter the full path to the Directory where the screenshots are located (example: C:\\User\\MyUser\\Pictures\\Screenshots)." +
-    "\r\nAlternatively you can place the executable in the directory with the screenshots.");
+print($"|n|n|c1>> Type quit to exit the program.|r|n");
 
-print(">> At any point you can type quit to stop and exit the program.\r\n", ConsoleColor.Red);
-print("hello |c0World|r I like |c6cats|r", ConsoleColor.Red);
 string[] supportedExt = new string[] { ".png", ".jpg", ".jpeg", ".bmp", ".tga" };
-string[] accepted_inputs = new string[] { "y", "n", "no", "yes", "exit", "cancel", "stop", "q", "quit" };
-
+string[] IO_accept = new string[] { "y", "yes", "continue" };
+string[] IO_cancel = new string[] { "n", "no", "cancel", "stop" };
+string[] exit_strings = new string[] { "exit", "q", "end", "quit" };
+string WORKING_DIRECTORY = "";
 List<string> testDirectory = retrieveDirpyFiles(Environment.CurrentDirectory);
 
 
-foreach(string file in testDirectory) {
-    //Console.Write(Path.GetFileNameWithoutExtension(file).Length == "WoWScrnShot_120909_042440".Length);
-    Console.WriteLine(file);
-}
-
-if(testDirectory.Count > 0) {
-    Console.Write("Detected Screenshots. Proceede? (y/n) ");
+if (testDirectory.Count > 0)
+{
     string f;
-    while (true) {
+    while (true)
+    {
+        print("|c2Detected Screenshots.|r Proceede? (y/n) ");
         f = Console.ReadLine().ToLower();
 
-        if (!string.IsNullOrWhiteSpace(f) && accepted_inputs.Contains(f))
+        if (!string.IsNullOrWhiteSpace(f) && (IO_accept.Contains(f) || IO_cancel.Contains(f) || exit_strings.Contains(f)))
             break;
-        Console.Write("invalid input\r\nProceede? (y/n) ");
+        print($"|c0invalid input|r|n");
     }
 
-    switch(f) {
+    switch (f)
+    {
         case "no":
         case "n":
-            Console.WriteLine("Proccess cancelled, exiting...");
-            Environment.Exit(0);
-        break;
+            print("|c2Ignoring current directory.|r|n");
+            await confirm_working_directory();
+            break;
         case "yes":
         case "y":
-            Console.WriteLine("Proceeding to fuck shit up"); //poolease change this
-        break;
+            WORKING_DIRECTORY = Environment.CurrentDirectory;
+            await rename_files(testDirectory);
+            break;
         case "exit":
         case "stop":
         case "cancel":
         case "q":
         case "quit":
-            Console.WriteLine("Exiting program.");
-        break;
-    }
-} else {
-    string f;
-
-    while(true) {
-        f = Console.ReadLine();
-
-        if(string.IsNullOrEmpty(f) || !Directory.Exists(f)) {
-            Console.WriteLine($"Could not find directory {f}.");
-        } else
+            print("|c0Exiting program.|r");
+            Environment.Exit(0);
             break;
     }
+}
+else
+    await confirm_working_directory();
+
+
+
+
+async Task confirm_working_directory() {
+    string f;
+
+    while (true) {
+        print("Enter Path> ");
+        f = Console.ReadLine();
+
+        if (exit_strings.Contains(f)) {
+            print("|c0Operation cancelled. Exiting program.|r|n");
+            Environment.Exit(0);
+            break;
+        }
+
+        if (string.IsNullOrEmpty(f) || !Directory.Exists(f)) {
+            print($"|c1Could not find directory {f}.|r|n");
+        } else {
+            WORKING_DIRECTORY = f;
+            break;
+        }
+    }
+
+    print($"You set the working directory as |c1\"{WORKING_DIRECTORY}\"|r. Is this correct? (y/n) ");
+    string confirm_working_dir = Console.ReadLine();
+
+    if (IO_accept.Contains(confirm_working_dir))
+            await rename_files(retrieveDirpyFiles(WORKING_DIRECTORY));
+        else {
+            print($"|c0Directory {WORKING_DIRECTORY} is invalid. It does not contain any WoW related screenshot names.|r|n");
+            _ = confirm_working_directory();
+        }
+
+    if (IO_cancel.Contains(confirm_working_dir))
+        _ = confirm_working_directory();
+
+    if (exit_strings.Contains(confirm_working_dir))
+        print($"|c1Operation cancelled. Exiting program.|r|n");
+}
+
+
+async Task rename_files(List<string> files) {
+
+    if (files.Count < 1) {
+        print($"|c0Directory {WORKING_DIRECTORY} is invalid. It does not contain any WoW related screenshot names.|r|n");
+        _ = confirm_working_directory();
+        return;
+    }
+
+    print("|n|n|c3Starting Renamer.|n================================================================================|r|n|n");
+
+    foreach(var file in files) {
+        string current_filename = Path.GetFileNameWithoutExtension(file);
+        string file_ext = Path.GetExtension(file);
+
+        string file_date = current_filename.Substring(12, 6);
+        string file_time = current_filename.Substring(19, 6);
+        
+        if (DateTime.TryParseExact(file_date + file_time, "ddMMyyHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime file_dt)) {
+            string new_file_name = $"WoWScrnShot_{file_dt:yyyyMMdd_HHmmss}{file_ext}";
+            string new_file_path = Path.Combine(WORKING_DIRECTORY, new_file_name);
+
+            try {
+                File.Move(file, new_file_path);
+                print($"|c3Renamed {current_filename}{file_ext} => to => {new_file_name}|r|n");
+            } catch (Exception ex) {
+                print($"|n|c0Could not rename {current_filename}{file_ext}. Error: {ex}.|nPlease report this error to the developer if it presists|r|n");
+            }
+        }
+    }
+
+    print("|n|c2Operation Complete! Enjoy your Sortable Files.|r|nPress any key to close this window.");
+    Console.ReadKey();
 }
 
 
@@ -82,44 +146,46 @@ List<string> retrieveDirpyFiles(string path) {
 }
 
 
+// YOU WILL NEVER TAKE moo FROM ME!
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 class moo {// Moooo (^o^)   )\
-
-    /// <summary>
-    ///  Colors the cow Moos in.
-    /// </summary>
-    private enum MooCodes {
-        Red = 0,
-        Yellow = 1,
-        Green = 2,
-        Blue = 3
-    }
-
-    public static void print(string txt, ConsoleColor c = ConsoleColor.Magenta) {
-        if (c == ConsoleColor.Magenta) {
-            Console.WriteLine(txt);
-            return;
-        }
-
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
+    public static void print(string txt) {
         ConsoleColor Neverevereverveverstop = Console.ForegroundColor; //Chvches - Never Say Die();
 
         var colorStack = new Stack<ConsoleColor>();
-        colorStack.Push(Neverevereverveverstop); // Start with the default color
+        colorStack.Push(Neverevereverveverstop);
 
         int i = 0;
         while (i < txt.Length) {
             if (txt[i] == '|') {
-                switch (txt[i]) {
+                switch (txt[++i]) {
                     case 'r':
                         if (colorStack.Count > 1) colorStack.Pop();
                         Console.ForegroundColor = colorStack.Peek();
-                        i += 2;
+                        i += 1;
                     break;
                     case 'c':
-                        int color = txt[i + 2] - '0';
+                        int color = txt[i + 1] - '0';
 
-                        colorStack.Push((ConsoleColor)Enum.Parse(typeof(MooCodes), color.ToString()));
-                        Console.ForegroundColor = colorStack.Last();
-                        i += 3;
+                        ConsoleColor Moo = color switch {
+                            0 => ConsoleColor.Red,
+                            1 => ConsoleColor.Yellow,
+                            2 => ConsoleColor.Green,
+                            3 => ConsoleColor.Blue,
+                            5 => ConsoleColor.Magenta,
+                            6 => ConsoleColor.Blue,
+                            7 => ConsoleColor.Magenta,
+                            8 => ConsoleColor.Yellow,
+                            _ => throw new Exception("You entered an incorrect colorcode. I DON'T WANT TO BE HERE ANYMORE")
+                        };
+
+                        colorStack.Push(Moo);
+                        i += 2;
+                    break;
+                    case 'n':
+                        Console.Write(Environment.NewLine);
+                        i++;
                     break;
                     default:
                         Console.Write(txt[i]);
@@ -127,102 +193,9 @@ class moo {// Moooo (^o^)   )\
                     break;
                 }
             } else {
+                Console.ForegroundColor = colorStack.Peek();
                 Console.Write(txt[i++]);
             }
         }
-
-        if (txt.Contains("|c")) {
-            List<int> color_escape_start = new List<int>();
-            List<int> color_escape_end = new List<int>();
-
-            Dictionary<string, int> ColoredText = new Dictionary<string, int>();
-            List<string> outerText = new List<string>();
-
-            //int color_escape_start = txt.IndexOf("|c");
-            //int color_escape_stop = txt.IndexOf("|r");
-            //int ihopetheresafuckingmethodforthis = txt.LastIndexOf("|r");
-
-                
-
-
-                if (txt.IndexOf("|r") != txt.LastIndexOf("|r")) {
-                //more than 1 escaperefsadaaaaasdaffsdsdafsdafasdf
-
-                int pos = 0;
-                int lastpos = txt.LastIndexOf("|r");
-
-                while (pos < lastpos -1) {
-                    int i = txt.IndexOf("|c");
-                    int j = txt.IndexOf("|r");
-
-                    int reader = txt.IndexOf("|c");
-                    int reader_count = 0;
-                    while(true) {
-                        /*
-                         * a |c0Apple|r is read und a |c3cat can be any |c4color|r|r
-                         */
-                        //read 1|c to make sure there isn't a nested 2|c before 1|r
-                        int next = txt.IndexOf("|c", reader + 1);
-
-                        if (next < txt.IndexOf("|r")) {
-                            reader_count++; //found nesting
-                            reader = txt.IndexOf("|c", next + 1);
-                        } else {
-                            //some logic to check end of string
-                            continue;
-                        }
-                    }
-
-                    outerText.Add(txt.Substring(0, i));
-                    ColoredText.Add(txt.Substring(i + 1, i - j + 1), Convert.ToInt32(txt.Substring(i, 1)));
-
-                    if(txt.IndexOf("|c", i) < j) {
-                        //FUCK;
-                    }
-                    outerText.Add(txt.Substring(j + 2));
-
-
-                    color_escape_start.Add(i);
-                    color_escape_end.Add(j);
-                    pos = j;
-                }
-
-
-            }
-
-            /*string colored_text = txt.Substring(0, color_escape_stop);
-            colored_text = colored_text.Substring(color_escape_start + 1);
-            int colorcode = Convert.ToInt32(colored_text.Substring(1, 1));
-            colored_text = colored_text.Substring(2);
-
-            Console.WriteLine($"The text is {colored_text} and the colorcode is {colorcode}");
-
-            ConsoleColor color;
-
-            switch(colorcode) {
-                case 0: color = ConsoleColor.Red; break;
-                case 1: color = ConsoleColor.Yellow; break;
-                case 2: color = ConsoleColor.Green; break;
-                case 3: color = ConsoleColor.Blue; break;
-                case 5: color = ConsoleColor.Yellow; break;
-                case 6: color = ConsoleColor.Blue; break;
-                case 7: color = ConsoleColor.Magenta; break;
-                case 8: color = ConsoleColor.Yellow; break;
-                default: throw new Exception("You entered an incorrect colorcode");
-            }
-
-            Console.Write($"{txt.Substring(0, color_escape_start)}");
-            Console.ForegroundColor = color;
-            Console.Write($"{colored_text}");
-            Console.ForegroundColor = Neverevereverveverstop;
-            Console.Write($"{txt.Substring(color_escape_stop + 2)}\r\n");*///color_escape_start + 1 + colored_text.Length)}")
-            //Console.WriteLine(txt.Substring(0, color_escape_stop));
-
-            return;
-        }
-
-        Console.ForegroundColor = c;
-        Console.WriteLine(txt);
-        Console.ForegroundColor = Neverevereverveverstop;
     }
 }

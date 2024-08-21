@@ -20,6 +20,9 @@ mono_crash.*
 Modules/FoolForLove.cs
 iconhire.ico
 
+# Security 
+*.snk
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
