@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>warnings</Nullable>
     <ApplicationIcon>iconhire.ico</ApplicationIcon>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>adachi.snk</AssemblyOriginatorKeyFile>
     <Authors>$(AssemblyName)</Authors>
@@ -14,7 +14,7 @@
     <Copyright>Adachi91</Copyright>
     <RepositoryUrl>https://github.com/Adachi91/WoWScrnShot_Renamer</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <FileVersion>1.3.7</FileVersion>
+    <FileVersion>1.3.71</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

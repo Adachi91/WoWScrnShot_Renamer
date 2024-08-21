@@ -15,7 +15,7 @@ string[] IO_accept = new string[] { "y", "yes", "continue" };
 string[] IO_cancel = new string[] { "n", "no", "cancel", "stop" };
 string[] exit_strings = new string[] { "exit", "q", "end", "quit" };
 string WORKING_DIRECTORY = "";
-List<string> testDirectory = retrieveDirpyFiles(Environment.CurrentDirectory);
+List<string> testDirectory = retrieve_files(Environment.CurrentDirectory);
 
 
 if (testDirectory.Count > 0)
@@ -84,7 +84,7 @@ async Task confirm_working_directory() {
     string confirm_working_dir = Console.ReadLine();
 
     if (IO_accept.Contains(confirm_working_dir))
-            await rename_files(retrieveDirpyFiles(WORKING_DIRECTORY));
+            await rename_files(retrieve_files(WORKING_DIRECTORY));
         else {
             print($"|c0Directory {WORKING_DIRECTORY} is invalid. It does not contain any WoW related screenshot names.|r|n");
             _ = confirm_working_directory();
@@ -99,6 +99,8 @@ async Task confirm_working_directory() {
 
 
 async Task rename_files(List<string> files) {
+
+    int counter = 0;
 
     if (files.Count < 1) {
         print($"|c0Directory {WORKING_DIRECTORY} is invalid. It does not contain any WoW related screenshot names.|r|n");
@@ -115,12 +117,13 @@ async Task rename_files(List<string> files) {
         string file_date = current_filename.Substring(12, 6);
         string file_time = current_filename.Substring(19, 6);
         
-        if (DateTime.TryParseExact(file_date + file_time, "ddMMyyHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime file_dt)) {
+        if (DateTime.TryParseExact(file_date + file_time, "MMddyyHHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime file_dt)) {
             string new_file_name = $"WoWScrnShot_{file_dt:yyyyMMdd_HHmmss}{file_ext}";
             string new_file_path = Path.Combine(WORKING_DIRECTORY, new_file_name);
 
             try {
                 File.Move(file, new_file_path);
+                counter++;
                 print($"|c3Renamed {current_filename}{file_ext} => to => {new_file_name}|r|n");
             } catch (Exception ex) {
                 print($"|n|c0Could not rename {current_filename}{file_ext}. Error: {ex}.|nPlease report this error to the developer if it presists|r|n");
@@ -128,14 +131,14 @@ async Task rename_files(List<string> files) {
         }
     }
 
-    print("|n|c2Operation Complete! Enjoy your Sortable Files.|r|nPress any key to close this window.");
+    print($"|n|c2Complete! Proccessed {counter} files. Enjoy your Sortable Files.|r|nPress any key to close this window.");
     Console.ReadKey();
 }
 
 
 //WoWScrnShot_120909_042440.jpg
 //WoWScrnShot_082820_223514.avif IT'S REAL DON'T QUESTION IT, just believe in the power of AV1 encoding
-List<string> retrieveDirpyFiles(string path) {
+List<string> retrieve_files(string path) {
     return Directory.GetFiles(path).Where(
         f => supportedExt.Contains(Path.GetExtension(f).ToLower())
         && !File.GetAttributes(f).HasFlag(FileAttributes.ReparsePoint)
